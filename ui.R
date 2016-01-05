@@ -11,7 +11,7 @@ textInputRow<-function (inputId, label, value = "")
       tags$input(id = inputId, type = "text", value = value, class="input-small"))
 }
 
-sinyUI(fluidPage(
+shinyUI(fluidPage(
   withMathJax(),
   # section below allows in-line LaTeX via $ in mathjax.
   tags$div(HTML("<script type='text/x-mathjax-config'>
