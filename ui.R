@@ -74,9 +74,9 @@ shinyUI(fluidPage(
                        textInputRow("rho2", "Maximum:"),
                        tags$head(tags$style(type="text/css", "#rho2 {width: 75px}")),
                        textInputRow("numval", "Number of values:", value="10"),
-                       tags$head(tags$style(type="text/css", "#numval {width: 50px}")))
-      ),
-    #  actionButton("calc", "Calculate!")
+                       tags$head(tags$style(type="text/css", "#numval {width: 50px}"))),
+      actionButton("calc", "Calculate!")),
+    
     mainPanel(
       tabsetPanel(
         #         tabPanel("Numeric Output",

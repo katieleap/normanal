@@ -3,27 +3,27 @@ library(clusterPower)
 library(xtable)
 library(ggplot2)
 
-shinyServer(function(input, output){
+shinyServer(function(input, output, session){
   
   
-  ICC <- reactive({
+  ICC <- eventReactive(input$calc, {
     if (input$rhosigmab == 'ICC') as.numeric(input$ICC) else  {
       as.numeric(input$sigmab)/(as.numeric(input$sigma)+as.numeric(input$sigmab))
     }
   })
   
-  CV <- reactive({
+  CV <- eventReactive(input$calc, {
     if (length(input$options) == 0) 0 else {
       if ('useCV' %in% input$options) as.numeric(input$CV) else 0 }
   })
   
-  DP <- reactive ({ # design effect power
+  DP <- eventReactive(input$calc, { # design effect power
     round(as.numeric(power.t.test(n = as.numeric(input$N)*as.numeric(input$M)/(1+(as.numeric(input$N)-1)*ICC()),
                                   delta=as.numeric(input$d), sig.level=as.numeric(input$alpha))$power),2)
     # approximate version of analytic power
   })
   
-  AP <- reactive ({
+  AP <- eventReactive(input$calc, {
     df <- 2*(as.numeric(input$M)-1) # degrees of freedom
     deff <- 1+((CV()^2+1)*as.numeric(input$N)-1)*ICC() # correction factor with CV
     lambda <- (as.numeric(input$d)/as.numeric(input$sigma)) / sqrt(2*deff/(as.numeric(input$M)*as.numeric(input$N)))
@@ -33,7 +33,7 @@ shinyServer(function(input, output){
   })
   
   # if sigma-b isn't input
-  SB <- reactive ({
+  SB <- eventReactive(input$calc, {
     if (input$rhosigmab == 'ICC') (as.numeric(input$ICC)*as.numeric(input$sigma))/(as.numeric(input$ICC)+1) else {
       as.numeric(input$sigmab) }
   })
@@ -52,7 +52,7 @@ shinyServer(function(input, output){
   
   ### table output ###
   # difference n.clusters  n.per.cluster sigma.b sigma icc cv approx.power analytic.power
-  icctable <- reactive({
+  icctable <- eventReactive(input$calc, {
     icctab <- data.frame(delta=as.numeric(input$d), M=as.numeric(input$M),N=as.numeric(input$N), 
                          SB=round(SB(),4), sigma=as.numeric(input$sigma), ICC=round(ICC(),4), CV=CV(),
                          DP=DP(), AP=AP())
@@ -77,6 +77,9 @@ shinyServer(function(input, output){
   # feed that to the plot function
   # !! approximate power plotted over on top !! - haven't done this yet
   output$plot <- renderPlot({
+    validate(
+      need(input$options == 'multipleICC' || input$options.length > 1, "Input multiple values to plot!")
+    )
     rho.values <- seq(as.numeric(input$rho1),as.numeric(input$rho2),length.out=as.numeric(input$numval))
     power <- function(rho){
       df <- 2*(as.numeric(input$M)-1) # degrees of freedom
