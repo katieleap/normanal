@@ -1,6 +1,7 @@
 library(shiny)
 library(clusterPower)
 library(ggplot2)
+library(DT)
 
 shinyServer(function(input, output, session){
   observeEvent(input$model, {
@@ -60,9 +61,6 @@ shinyServer(function(input, output, session){
     calctab <- data.frame(delta=as.numeric(input$d), M=as.numeric(input$M),N=as.numeric(input$N), 
                          SB=round(SB(),4), sigma=as.numeric(input$sigma), ICC=round(ICC(),4), CV=CV(),
                          DP=DP(), AP=AP())
-    colnames(calctab) <- c("Difference", "Number of Clusters", "Number per Cluster", "$\\sigma_b^2$",
-                          "$\\sigma^2$", "Intra-cluster Correlation Coefficient", "Coefficent of Variation",
-                          "Approximate Power", "Analytic Power")
     calctab
   })
 
@@ -76,14 +74,19 @@ shinyServer(function(input, output, session){
   # clearall makes an empty table and forgets everything we've done
   clearall <- eventReactive(input$clearall, {
     emptytab <- data.frame()
-    colnames(emptytab) <- c("Difference", "Number of Clusters", "Number per Cluster", "$\\sigma_b^2$",
-                           "$\\sigma^2$", "Intra-cluster Correlation Coefficient", "Coefficent of Variation",
-                           "Approximate Power", "Analytic Power")
     emptytab
   })
-  
-  output$table <- renderDataTable(calctable(),options=list(paging=FALSE,searching=FALSE,
-                                                           ordering=0, processing=0, info=0))
+  output$tablefiller <- renderText({
+    validate(
+      need(input$calc, 'Press the calculate button to create a table!'))
+  })
+    
+  output$table <- DT::renderDataTable(calctable(),options=list(paging=FALSE,searching=FALSE,
+                                                           ordering=0, processing=0, info=0),
+                                      class='compact hover row-border nowrap',
+                                      colnames = c("Difference", "Number of Clusters", "Number per Cluster", "Sigma-B",
+                                                              "Sigma", "ICC", "CV",
+                                                              "Approximate Power", "Analytic Power"))
 
 # we probably want a save as csv option, yeah?
   

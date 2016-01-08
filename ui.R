@@ -1,5 +1,6 @@
 library(shiny)
 library(shinyjs)
+library(DT)
 
 # this function allows text inputs to be on the same line; default has them on new lines
 numericInputRow<-function (inputId, label, value) 
@@ -88,9 +89,18 @@ shinyUI(fluidPage(
         #                  br(),
         #                  br()),
         tabPanel("Table",
-                 dataTableOutput("table"),
+                 br(),
+                 textOutput("tablefiller"),
+                 DT::dataTableOutput("table"),
+                 br(),
                  actionButton("save", "Save this Calculation"),
-                 actionButton("clearall", "Clear All Saved Values")),
+                 actionButton("clearall", "Clear All Saved Values"),
+                 br(), br(),
+                 p("Abbreviations:"),
+                 helpText("Sigma-B: $\\sigma_b^2$"),
+                 helpText("Sigma: $\\sigma^2$"),
+                 helpText("ICC: Intra-cluster Correlation Coefficient"),
+                 helpText("CV: Coefficent of Variation")),
         tabPanel("Plot",
                  plotOutput("plot")),
         tabPanel("Simulations",
