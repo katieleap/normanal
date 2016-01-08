@@ -1,10 +1,11 @@
 library(shiny)
 library(clusterPower)
-library(xtable)
 library(ggplot2)
 
 shinyServer(function(input, output, session){
-  
+  observeEvent(input$model, {
+    toggle("modeltext")
+  })
   
   ICC <- eventReactive(input$calc, {
     if (input$rhosigmab == 'ICC') as.numeric(input$ICC) else  {
@@ -52,17 +53,41 @@ shinyServer(function(input, output, session){
   
   ### table output ###
   # difference n.clusters  n.per.cluster sigma.b sigma icc cv approx.power analytic.power
-  icctable <- eventReactive(input$calc, {
-    icctab <- data.frame(delta=as.numeric(input$d), M=as.numeric(input$M),N=as.numeric(input$N), 
+  
+  # calctable runs when we ask it to calculate
+  # it also needs to append to anything that has already been saved, but without becoming permanent
+  calctable <- eventReactive(input$calc, {
+    calctab <- data.frame(delta=as.numeric(input$d), M=as.numeric(input$M),N=as.numeric(input$N), 
                          SB=round(SB(),4), sigma=as.numeric(input$sigma), ICC=round(ICC(),4), CV=CV(),
                          DP=DP(), AP=AP())
-    colnames(icctab) <- c("Difference", "Number of Clusters", "Number per Cluster", "$\\sigma_b^2$",
+    colnames(calctab) <- c("Difference", "Number of Clusters", "Number per Cluster", "$\\sigma_b^2$",
                           "$\\sigma^2$", "Intra-cluster Correlation Coefficient", "Coefficent of Variation",
                           "Approximate Power", "Analytic Power")
-    icctab
+    calctab
   })
-  output$table <- renderDataTable(icctable(),options=list(paging=FALSE,searching=FALSE,
-                                                          ordering=0, processing=0, info=0))
+
+  # savetable runs when we ask it to save and should append the new calculation to the old info
+  # need a way to have calctable append to savetable if we run a new calculaton
+  savetable <- eventReactive(input$save, {
+    savetab <- data.frame(savetable(),calctable())
+    savetab
+  })
+  
+  # clearall makes an empty table and forgets everything we've done
+  clearall <- eventReactive(input$clearall, {
+    emptytab <- data.frame()
+    colnames(emptytab) <- c("Difference", "Number of Clusters", "Number per Cluster", "$\\sigma_b^2$",
+                           "$\\sigma^2$", "Intra-cluster Correlation Coefficient", "Coefficent of Variation",
+                           "Approximate Power", "Analytic Power")
+    emptytab
+  })
+  
+  output$table <- renderDataTable(calctable(),options=list(paging=FALSE,searching=FALSE,
+                                                           ordering=0, processing=0, info=0))
+
+# we probably want a save as csv option, yeah?
+  
+  
   # options for rendertable: include.rownames=FALSE, digits=c(0,2,0,0,4,4,4,2,2,2)
   
   # mixed effects model -> used for cluster-randomized trials
@@ -75,7 +100,7 @@ shinyServer(function(input, output, session){
   ### plot output ###
   # vector of analytic powers from this equation using Vectorize()
   # feed that to the plot function
-  # !! approximate power plotted over on top !! - haven't done this yet
+
   output$plot <- renderPlot({
     validate(
       need(input$options == 'multipleICC' || input$options.length > 1, "Input multiple values to plot!")
@@ -107,19 +132,30 @@ shinyServer(function(input, output, session){
   
   ### simulations ###
   output$simulation <- renderText({
-    
-    p.try <- power.sim.normal(n.sim=100, effect.size=as.numeric(input$d), alpha=.05,
+    validate(
+      need(input$nsims,"Enter the number of simulations!")
+    )
+    simulate()
+  })
+  simulate <- eventReactive(input$run, {
+    withCallingHandlers({
+      shinyjs::text("text", "")
+    p.try <- suppressWarnings(power.sim.normal(n.sim=100, effect.size=as.numeric(input$d), alpha=.05,
                               n.clusters=as.numeric(input$N), n.periods=1,
                               cluster.size=as.numeric(input$M),
                               period.effect = .7, period.var = 0,
                               btw.clust.var=as.numeric(input$sigmab), indiv.var=as.numeric(input$sigma),
                               verbose=TRUE,
-                              estimation.function=random.effect)
-    
+                              estimation.function=random.effect))
     p.try$power
+    nsims <- as.numeric(input$nsims)
     binom.test(p.try$power*nsims, nsims)$conf.int[1:2]
-    
-  })
+    },
+    message = function(m) {
+      shinyjs::text(id = "text", text = m$message)
+    })
+  
+   })
   
 })
 
