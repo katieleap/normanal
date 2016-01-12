@@ -104,6 +104,7 @@ shinyServer(function(input, output, session){
                            sigma=rep_len(as.numeric(input$sigma),length.out=as.numeric(input$numval)), 
                            ICC=rho.values, CV=rep_len(CV(),length.out=as.numeric(input$numval)),
                            DP=rdp, AP=rdp)
+      colnames(t$data)[6] <- "ICC"
       } else {
         rho.values <- seq(as.numeric(input$rho1),as.numeric(input$rho2),length.out=as.numeric(input$numval))
         rap <- laply(rho.values,sbpower)
@@ -115,6 +116,7 @@ shinyServer(function(input, output, session){
                              sigma=rep_len(as.numeric(input$sigma),length.out=as.numeric(input$numval)), 
                              ICC= laply(rho.values,icccalc), CV=rep_len(CV(),length.out=as.numeric(input$numval)),
                              DP=rdp, AP=rdp)
+        colnames(t$data)[4] <- "SB"
       }
     }
     })
