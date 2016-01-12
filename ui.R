@@ -85,6 +85,7 @@ shinyUI(fluidPage(
                  br(),
                  actionButton("save", "Save this Calculation"),
                  actionButton("clearall", "Clear All Saved Values"),
+                 downloadButton("download",label="Download as CSV File"),
                  br(), br(),
                  p("Abbreviations:"),
                  helpText("Sigma-B: $\\sigma_b^2$"),

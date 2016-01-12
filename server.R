@@ -144,7 +144,14 @@ shinyServer(function(input, output, session){
                                                               "Sigma", "ICC", "CV",
                                                               "Approximate Power", "Analytic Power"))
 # we probably want a save as csv option, yeah?
-
+  output$download <- downloadHandler(
+    filename=function(){
+      paste('poweranalysis', Sys.Date(),'.csv',sep='')
+    },
+    content = function(file) {
+      write.csv(rbind(s$data,t$data),file)
+    }
+  )
   
   
 ### plot output ###
