@@ -159,7 +159,7 @@ shinyServer(function(input, output, session){
 ### plot output ###
   output$plot <- renderPlot({
     validate(
-      need(input$options == 'multipleICC' || input$options.length > 1, "Input multiple values to plot!")
+      need(input$options == 'multipleICC' || length(input$options) > 1, "Input multiple values to plot!")
     )
     sigbrange <- function(){
     rho.values <- seq(as.numeric(input$rho1),as.numeric(input$rho2),length.out=as.numeric(input$numval))
