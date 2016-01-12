@@ -61,14 +61,13 @@ shinyUI(fluidPage(
       ## alpha can be one of the three options
       radioButtons("alpha","Enter alpha value:",c(0.025, 0.05,0.10),selected=0.05,inline=TRUE),
       
-      ## options: range of sigma-b, use CV (0 otherwise)
-      checkboxGroupInput("options", label="Options:", choices = c("Cluster size is variable" = "useCV", "Plot multiple values for $\\sigma_b^2$"
+      ## options: range of rho/sigma-b, use CV (0 otherwise)
+      checkboxGroupInput("options", label="Options:", choices = c("Cluster size is variable" = "useCV", "Plot multiple values for the ICC or $\\sigma_b^2$"
                                                                   = "multipleICC")),
       conditionalPanel(condition = "input.options == 'useCV' || input.options.length > 1",
                        numericInput("CV", label="Enter the coefficient of variation (CV):", value=0)),
       conditionalPanel(condition = "input.options == 'multipleICC' || input.options.length > 1",
-                       # calling it rho and ICC because I thought it was, and sigma-b is super long
-                       # it's not actually rho though
+                       # calling it rho, but if sigmab is selected, it'll run as sigmab
                        numericInputRow("rho1", "Minimum:", value=0),
                        tags$head(tags$style(type="text/css", "#rho1 {width: 75px}")),
                        numericInputRow("rho2", "Maximum:", value=1),
@@ -79,15 +78,6 @@ shinyUI(fluidPage(
     
     mainPanel(
       tabsetPanel(
-        #         tabPanel("Numeric Output",
-        #                  br(),
-        #                  h4("Analytic Power:"),
-        #                  textOutput("ap"),
-        #                  br(),
-        #                  h4("Approximate Power:"),
-        #                  textOutput("dp"),
-        #                  br(),
-        #                  br()),
         tabPanel("Table",
                  br(),
                  textOutput("tablefiller"),
@@ -107,8 +97,8 @@ shinyUI(fluidPage(
                  br(),
                  numericInput("nsims","Number of Simulations to Run:", value=100),
                  actionButton("run", "Run"),
+                 br(),br(),
+                 p(textOutput("text")),
                  br(),
-                 p(textOutput("simulation")),
-                 br(),
-                  textOutput("text"))
+                  textOutput("simulation"))
       )))))

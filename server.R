@@ -2,12 +2,15 @@ library(shiny)
 library(clusterPower)
 library(ggplot2)
 library(DT)
+library(reshape2)
 
 shinyServer(function(input, output, session){
+  ## allows us to hide and show model text by clicking ##
   observeEvent(input$model, {
     toggle("modeltext")
   })
-  
+
+### reactive values that we want to use whenever ### 
   ICC <- eventReactive(input$calc, {
     if (input$rhosigmab == 'ICC') as.numeric(input$ICC) else  {
       as.numeric(input$sigmab)/(as.numeric(input$sigma)+as.numeric(input$sigmab))
@@ -39,75 +42,61 @@ shinyServer(function(input, output, session){
     if (input$rhosigmab == 'ICC') (as.numeric(input$ICC)*as.numeric(input$sigma))/(as.numeric(input$ICC)+1) else {
       as.numeric(input$sigmab) }
   })
+  ### end reactive values ###
   
   
-  # values are reactive so I can use them wherever
+### text output ###
   output$ap <- renderText(AP())
   output$dp <- renderText(DP())
   
-  # b in sigma-b means random effects
   
-  # not just one input any more
-  # input min and max
-  # output a table of five values between
-  # option: output a value or plot a range
-  
-  ### table output ###
+### table output ###
   # difference n.clusters  n.per.cluster sigma.b sigma icc cv approx.power analytic.power
   
   # calctable runs when we ask it to calculate
   # it also needs to append to anything that has already been saved, but without becoming permanent
-  calctable <- eventReactive(input$calc, {
-    calctab <- data.frame(delta=as.numeric(input$d), M=as.numeric(input$M),N=as.numeric(input$N), 
+  t <- reactiveValues(data=NULL)
+  s <- reactiveValues(data=NULL)
+  observeEvent(input$calc, {
+    t$data <- data.frame(delta=as.numeric(input$d), M=as.numeric(input$M),N=as.numeric(input$N), 
                          SB=round(SB(),4), sigma=as.numeric(input$sigma), ICC=round(ICC(),4), CV=CV(),
                          DP=DP(), AP=AP())
-    calctab
   })
 
   # savetable runs when we ask it to save and should append the new calculation to the old info
   # need a way to have calctable append to savetable if we run a new calculaton
-  savetable <- eventReactive(input$save, {
-    savetab <- data.frame(savetable(),calctable())
-    savetab
+  observeEvent(input$save, {
+    s$data <- rbind(s$data,t$data)
+    t$data <- NULL
   })
   
   # clearall makes an empty table and forgets everything we've done
-  clearall <- eventReactive(input$clearall, {
-    emptytab <- data.frame()
-    emptytab
+  observeEvent(input$clearall, {
+    t$data <- NULL
+    s$data <- NULL
   })
+  
   output$tablefiller <- renderText({
     validate(
       need(input$calc, 'Press the calculate button to create a table!'))
   })
     
-  output$table <- DT::renderDataTable(calctable(),options=list(paging=FALSE,searching=FALSE,
+  output$table <- DT::renderDataTable(rbind(s$data,t$data),options=list(paging=FALSE,searching=FALSE,
                                                            ordering=0, processing=0, info=0),
                                       class='compact hover row-border nowrap',
                                       colnames = c("Difference", "Number of Clusters", "Number per Cluster", "Sigma-B",
                                                               "Sigma", "ICC", "CV",
                                                               "Approximate Power", "Analytic Power"))
-
 # we probably want a save as csv option, yeah?
-  
-  
-  # options for rendertable: include.rownames=FALSE, digits=c(0,2,0,0,4,4,4,2,2,2)
-  
-  # mixed effects model -> used for cluster-randomized trials
-  # add an extra term and some extra notation
-  # assume that individuals are not independent in the model
-  # regular sigma comes from the normal distribution of e_ij (residual error)
-  # sigmab is a parameter of the normally distributed b_i (random effect)
-  
-  
-  ### plot output ###
-  # vector of analytic powers from this equation using Vectorize()
-  # feed that to the plot function
 
+  
+  
+### plot output ###
   output$plot <- renderPlot({
     validate(
       need(input$options == 'multipleICC' || input$options.length > 1, "Input multiple values to plot!")
     )
+    sigbrange <- function(){
     rho.values <- seq(as.numeric(input$rho1),as.numeric(input$rho2),length.out=as.numeric(input$numval))
     power <- function(rho){
       df <- 2*(as.numeric(input$M)-1) # degrees of freedom
@@ -126,14 +115,39 @@ shinyServer(function(input, output, session){
     }
     v.apr.power <- Vectorize(apr.power)
     power.df <- data.frame(rho.values,v.power(rho.values),v.apr.power(rho.values))
-    colnames(power.df) <- c("Values", "Power", "Approximate")
-    ggplot() + geom_point(data=power.df,aes(x=Values,y=Power),color="blue") + 
-      geom_point(data=power.df,aes(x=Values,y=Approximate),color="green")
+    colnames(power.df) <- c("Values", "Analytic", "Approximate")
+    melt.power <- melt(power.df, id="Values")
+    ggplot(data=melt.power,aes(x=Values, y = value, color = variable)) + geom_point() +
+      labs(list(y="Power")) + scale_color_discrete(name="Power")
+    }
+    iccrange <- function(){
+      rho.values <- seq(as.numeric(input$rho1),as.numeric(input$rho2),length.out=as.numeric(input$numval))
+      power <- function(rho){
+        df <- 2*(as.numeric(input$M)-1) # degrees of freedom
+        deff <- 1+((CV()^2+1)*as.numeric(input$N)-1)*rho # correction factor with CV
+        lambda <- (as.numeric(input$d)/as.numeric(input$sigma)) / sqrt(2*deff/(as.numeric(input$M)*as.numeric(input$N)))
+        nullq <- qt(as.numeric(input$alpha)/2, df, ncp=0)  # quantile of the alpha error, under the null, ncp=0
+        ap <- pt(nullq, df, lambda, lower.tail = TRUE) + pt(-nullq, df, lambda, lower.tail = FALSE)
+        return(ap)
+      }
+      v.power <- Vectorize(power)
+      apr.power <- function(rho){
+        power.t.test(n = as.numeric(input$N)*as.numeric(input$M)/(1+(as.numeric(input$N)-1)*rho),
+                     delta=as.numeric(input$d), sig.level=as.numeric(input$alpha))$power
+      }
+      v.apr.power <- Vectorize(apr.power)
+      power.df <- data.frame(rho.values,v.power(rho.values),v.apr.power(rho.values))
+      colnames(power.df) <- c("Values", "Analytic", "Approximate")
+      melt.power <- melt(power.df, id="Values")
+      ggplot(data=melt.power,aes(x=Values, y = value, color = variable)) + geom_point() +
+        labs(list(y="Power")) + scale_color_discrete(name="Power")
+    }
     
+    if (input$rhosigmab == 'ICC') iccrange() else sigbrange()
   })
   
   
-  ### simulations ###
+### simulations ###
   output$simulation <- renderText({
     validate(
       need(input$nsims,"Enter the number of simulations!")
@@ -152,7 +166,8 @@ shinyServer(function(input, output, session){
                               estimation.function=random.effect))
     p.try$power
     nsims <- as.numeric(input$nsims)
-    binom.test(p.try$power*nsims, nsims)$conf.int[1:2]
+    conf <- binom.test(p.try$power*nsims, nsims)$conf.int[1:2]
+    paste("Confidence Interval:", paste(round(conf,3),collapse="-"),sep=" ")
     },
     message = function(m) {
       shinyjs::text(id = "text", text = m$message)
