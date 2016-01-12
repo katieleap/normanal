@@ -102,4 +102,11 @@ shinyUI(fluidPage(
                  p(textOutput("text")),
                  br(),
                   textOutput("simulation"))
-      )))))
+      ))),
+    tags$footer(br(),
+                img(src="SPHHS_Logo_rgb.jpg", height=100, width=530), br(),
+                tags$small("Made by",  a(href="mailto:ken dot Kleinman at gmail dot com", target="_blank", "Ken Kleinman"), 
+                           " and Katie Leap.  This app generated using", a(href="http://www.rstudio.com/shiny/", target="_blank", "Shiny"),
+                           "software, and hosted by the generous folks at", 
+                           a(href="http://www.rstudio.com/", target="_blank", "RStudio.")), br())
+    ))
