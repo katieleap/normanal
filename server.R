@@ -3,6 +3,7 @@ library(clusterPower)
 library(ggplot2)
 library(DT)
 library(reshape2)
+library(plyr)
 
 shinyServer(function(input, output, session){
   ## allows us to hide and show model text by clicking ##
@@ -57,11 +58,66 @@ shinyServer(function(input, output, session){
   # it also needs to append to anything that has already been saved, but without becoming permanent
   t <- reactiveValues(data=NULL)
   s <- reactiveValues(data=NULL)
+  power <- function(rho){
+    df <- 2*(as.numeric(input$M)-1) # degrees of freedom
+    deff <- 1+((CV()^2+1)*as.numeric(input$N)-1)*rho # correction factor with CV
+    lambda <- (as.numeric(input$d)/as.numeric(input$sigma)) / sqrt(2*deff/(as.numeric(input$M)*as.numeric(input$N)))
+    nullq <- qt(as.numeric(input$alpha)/2, df, ncp=0)  # quantile of the alpha error, under the null, ncp=0
+    ap <- pt(nullq, df, lambda, lower.tail = TRUE) + pt(-nullq, df, lambda, lower.tail = FALSE)
+    return(ap)
+  }
+  apr.power <- function(rho){
+    power.t.test(n = as.numeric(input$N)*as.numeric(input$M)/(1+(as.numeric(input$N)-1)*rho),
+                 delta=as.numeric(input$d), sig.level=as.numeric(input$alpha))$power
+  }
+  sbpower <- function(rho){
+    df <- 2*(as.numeric(input$M)-1) # degrees of freedom
+    ICC <- rho/(as.numeric(input$sigma)+rho)
+    deff <- 1+((CV()^2+1)*as.numeric(input$N)-1)*ICC # correction factor with CV
+    lambda <- (as.numeric(input$d)/as.numeric(input$sigma)) / sqrt(2*deff/(as.numeric(input$M)*as.numeric(input$N)))
+    nullq <- qt(as.numeric(input$alpha)/2, df, ncp=0)  # quantile of the alpha error, under the null, ncp=0
+    ap <- pt(nullq, df, lambda, lower.tail = TRUE) + pt(-nullq, df, lambda, lower.tail = FALSE)
+    return(ap)
+  }
+  sbapr.power <- function(rho){
+    ICC <- rho/(as.numeric(input$sigma)+rho)
+    power.t.test(n = as.numeric(input$N)*as.numeric(input$M)/(1+(as.numeric(input$N)-1)*ICC),
+                 delta=as.numeric(input$d), sig.level=as.numeric(input$alpha))$power
+  }
+  icccalc <- function(rho){rho/(as.numeric(input$sigma)+rho)}
+  sbcalc <- function(rho){(rho*as.numeric(input$sigma))/(rho+1)}
+  
   observeEvent(input$calc, {
-    t$data <- data.frame(delta=as.numeric(input$d), M=as.numeric(input$M),N=as.numeric(input$N), 
-                         SB=round(SB(),4), sigma=as.numeric(input$sigma), ICC=round(ICC(),4), CV=CV(),
-                         DP=DP(), AP=AP())
-  })
+    if((input$options == 'useCV' & length(input$options) == 1) || length(input$options) == 0 ) {
+      t$data <- data.frame(delta=as.numeric(input$d), M=as.numeric(input$M),N=as.numeric(input$N), 
+                           SB=round(SB(),4), sigma=as.numeric(input$sigma), ICC=round(ICC(),4), CV=CV(),
+                           DP=DP(), AP=AP())
+    } else {
+      if(input$rhosigmab == 'ICC'){
+        rho.values <- list(seq(as.numeric(input$rho1),as.numeric(input$rho2),length.out=as.numeric(input$numval)))
+        rap <- laply(rho.values,power)
+        rdp <- laply(rho.values,apr.power)
+      t$data <- data.frame(delta=rep_len(as.numeric(input$d),length.out=as.numeric(input$numval)), 
+                           M=rep_len(as.numeric(input$M),length.out=as.numeric(input$numval)),
+                           N=rep_len(as.numeric(input$N),length.out=as.numeric(input$numval)), 
+                           SB= laply(rho.values,sbcalc), 
+                           sigma=rep_len(as.numeric(input$sigma),length.out=as.numeric(input$numval)), 
+                           ICC=rho.values, CV=rep_len(CV(),length.out=as.numeric(input$numval)),
+                           DP=rdp, AP=rdp)
+      } else {
+        rho.values <- seq(as.numeric(input$rho1),as.numeric(input$rho2),length.out=as.numeric(input$numval))
+        rap <- laply(rho.values,sbpower)
+        rdp <- laply(rho.values,sbapr.power)
+        t$data <- data.frame(delta=rep_len(as.numeric(input$d),length.out=as.numeric(input$numval)), 
+                             M=rep_len(as.numeric(input$M),length.out=as.numeric(input$numval)),
+                             N=rep_len(as.numeric(input$N),length.out=as.numeric(input$numval)), 
+                             SB=rho.values, 
+                             sigma=rep_len(as.numeric(input$sigma),length.out=as.numeric(input$numval)), 
+                             ICC= laply(rho.values,icccalc), CV=rep_len(CV(),length.out=as.numeric(input$numval)),
+                             DP=rdp, AP=rdp)
+      }
+    }
+    })
 
   # savetable runs when we ask it to save and should append the new calculation to the old info
   # need a way to have calctable append to savetable if we run a new calculaton
@@ -98,22 +154,8 @@ shinyServer(function(input, output, session){
     )
     sigbrange <- function(){
     rho.values <- seq(as.numeric(input$rho1),as.numeric(input$rho2),length.out=as.numeric(input$numval))
-    power <- function(rho){
-      df <- 2*(as.numeric(input$M)-1) # degrees of freedom
-      ICC <- rho/(as.numeric(input$sigma)+rho)
-      deff <- 1+((CV()^2+1)*as.numeric(input$N)-1)*ICC # correction factor with CV
-      lambda <- (as.numeric(input$d)/as.numeric(input$sigma)) / sqrt(2*deff/(as.numeric(input$M)*as.numeric(input$N)))
-      nullq <- qt(as.numeric(input$alpha)/2, df, ncp=0)  # quantile of the alpha error, under the null, ncp=0
-      ap <- pt(nullq, df, lambda, lower.tail = TRUE) + pt(-nullq, df, lambda, lower.tail = FALSE)
-      return(ap)
-    }
-    v.power <- Vectorize(power)
-    apr.power <- function(rho){
-      ICC <- rho/(as.numeric(input$sigma)+rho)
-      power.t.test(n = as.numeric(input$N)*as.numeric(input$M)/(1+(as.numeric(input$N)-1)*ICC),
-                   delta=as.numeric(input$d), sig.level=as.numeric(input$alpha))$power
-    }
-    v.apr.power <- Vectorize(apr.power)
+    v.power <- Vectorize(sbpower)
+    v.apr.power <- Vectorize(sbapr.power)
     power.df <- data.frame(rho.values,v.power(rho.values),v.apr.power(rho.values))
     colnames(power.df) <- c("Values", "Analytic", "Approximate")
     melt.power <- melt(power.df, id="Values")
@@ -122,19 +164,7 @@ shinyServer(function(input, output, session){
     }
     iccrange <- function(){
       rho.values <- seq(as.numeric(input$rho1),as.numeric(input$rho2),length.out=as.numeric(input$numval))
-      power <- function(rho){
-        df <- 2*(as.numeric(input$M)-1) # degrees of freedom
-        deff <- 1+((CV()^2+1)*as.numeric(input$N)-1)*rho # correction factor with CV
-        lambda <- (as.numeric(input$d)/as.numeric(input$sigma)) / sqrt(2*deff/(as.numeric(input$M)*as.numeric(input$N)))
-        nullq <- qt(as.numeric(input$alpha)/2, df, ncp=0)  # quantile of the alpha error, under the null, ncp=0
-        ap <- pt(nullq, df, lambda, lower.tail = TRUE) + pt(-nullq, df, lambda, lower.tail = FALSE)
-        return(ap)
-      }
       v.power <- Vectorize(power)
-      apr.power <- function(rho){
-        power.t.test(n = as.numeric(input$N)*as.numeric(input$M)/(1+(as.numeric(input$N)-1)*rho),
-                     delta=as.numeric(input$d), sig.level=as.numeric(input$alpha))$power
-      }
       v.apr.power <- Vectorize(apr.power)
       power.df <- data.frame(rho.values,v.power(rho.values),v.apr.power(rho.values))
       colnames(power.df) <- c("Values", "Analytic", "Approximate")
