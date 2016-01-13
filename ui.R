@@ -104,9 +104,11 @@ shinyUI(fluidPage(
                   textOutput("simulation"))
       ))),
     tags$footer(br(),
-                img(src="SPHHS_Logo_rgb.jpg", height=100, width=530), br(),
+                img(src="SPHHS_Logo_rgb.jpg", height=100, width=530), br(),br(),
+                tags$a(rel="license", href="http://creativecommons.org/licenses/by-nc-sa/4.0/",
+                       img(alt="Creative Commons License",style="border-width:0",
+                        src="https://i.creativecommons.org/l/by-nc-sa/4.0/88x31.png")),
                 tags$small("Made by",  a(href="mailto:ken dot Kleinman at gmail dot com", target="_blank", "Ken Kleinman"), 
                            " and Katie Leap.  This app generated using", a(href="http://www.rstudio.com/shiny/", target="_blank", "Shiny"),
-                           "software, and hosted by the generous folks at", 
-                           a(href="http://www.rstudio.com/", target="_blank", "RStudio.")), br())
+                           "software."), br(), br())
     ))
