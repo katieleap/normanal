@@ -62,8 +62,13 @@ shinyUI(fluidPage(
       radioButtons("alpha","Enter alpha value:",c(0.025, 0.05,0.10),selected=0.05,inline=TRUE),
       
       ## options: range of rho/sigma-b, use CV (0 otherwise)
-      checkboxGroupInput("options", label="Options:", choices = c("Cluster size is variable" = "useCV", "Use multiple values for the ICC or $\\sigma_b^2$"
-                                                                  = "multipleICC")),
+      conditionalPanel(condition = "input.rhosigmab == 'ICC'",
+                       checkboxGroupInput("options", label="Options:", choices = c("Cluster size is variable" = "useCV", "Use multiple values for the ICC"
+                                                                                   = "multipleICC"))),
+      conditionalPanel(condition = "input.rhosigmab == 'sigmab'",
+                       checkboxGroupInput("options", label="Options:", choices = c("Cluster size is variable" = "useCV", "Use multiple values for $\\sigma_b^2$"
+                                                                                   = "multipleICC"))),
+
       conditionalPanel(condition = "input.options == 'useCV' || input.options.length > 1",
                        numericInput("CV", label="Enter the coefficient of variation (CV):", value=0)),
       conditionalPanel(condition = "input.options == 'multipleICC' || input.options.length > 1",
