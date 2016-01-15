@@ -106,7 +106,22 @@ shinyUI(fluidPage(
                  br(),br(),
                  p(textOutput("text")),
                  br(),
-                  textOutput("simulation"))
+                  textOutput("simulation")),
+        tabPanel("Citations",
+                 h4("For normal results with constant cluster size:"),
+                  p("Donner, A. and Klar, N. Statistical Considerations in the Design and Analysis 
+                    of Community Intervention Trials. The Journal of Clinical Epidemiology 1996;49(4):435-439 
+                    PMID: 8621994"),
+                  p("Murray D. Design and Analysis of Group-Randomized Trials. New York: Oxford University 
+                    Press; 1998"),
+                 h4("For variable cluster size using the coefficient of variation:"),
+                 p("Eldridge SM, Ashby D, Kerry S. Sample size for cluster randomized trials: effect of coefficient 
+                  of variation of cluster size and analysis method. Int. J. Epidemiol. (October 2006) 35(5): 
+                  1292-1300.doi: 10.1093/ije/dyl129 PMID: 16943232"),
+                 h4("For simulations:"),
+                  p("Reich NG, Myers JA, Obeng D, Milstone AM, Perl TM. Empirical Power and Sample Size Calculations 
+                    for Cluster-Randomized and Cluster-Randomized Crossover Studies. PLoS ONE 2012.7(4):e35564 
+                    doi: 10.1371/journal.pone.0035564 PMCID: PMC3338707"))
       ))),
     tags$footer(br(),
                 img(src="SPHHS_Logo_rgb.jpg", height=100, width=530), br(),br(),
