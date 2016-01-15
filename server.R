@@ -11,6 +11,11 @@ shinyServer(function(input, output, session){
     toggle("modeltext")
   })
 
+  ## allows us to hide and show disclaimer text by clicking ##
+  observeEvent(input$disclaimer, {
+    toggle("disclaimertext")
+  })  
+  
 ### reactive values that we want to use whenever ### 
   ICC <- eventReactive(input$calc, {
     if (input$rhosigmab == 'ICC') as.numeric(input$ICC) else  {

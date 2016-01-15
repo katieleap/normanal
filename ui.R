@@ -110,5 +110,11 @@ shinyUI(fluidPage(
                         src="https://i.creativecommons.org/l/by-nc-sa/4.0/88x31.png")),
                 tags$small("Made by",  a(href="mailto:ken dot Kleinman at gmail dot com", target="_blank", "Ken Kleinman"), 
                            " and Katie Leap.  This app generated using", a(href="http://www.rstudio.com/shiny/", target="_blank", "Shiny"),
-                           "software."), br(), br())
+                           "software."), br(),
+                actionLink("disclaimer","Disclaimer"),
+                hidden(div(id="disclaimertext", p('We provide the calculations above as a service to the public.  
+                                                  We are not responsible for, and expressly disclaim all liability 
+                                                  for, damages of any kind arising out of use, reference to, or 
+                                                  reliance on any information contained herein.'))),
+                br(),br())
     ))
