@@ -147,8 +147,8 @@ shinyServer(function(input, output, session){
   output$table <- DT::renderDataTable(rbind(s$data,t$data),options=list(paging=FALSE,searching=FALSE,
                                                            ordering=0, processing=0, info=0),
                                       class='compact hover row-border nowrap',
-                                      colnames = c("Difference", "Number of Clusters", "Number per Cluster", "Sigma-B",
-                                                              "Sigma", "ICC", "CV",
+                                      colnames = c("Difference", "Number of Clusters", "Number per Cluster", "Sigma_b^2",
+                                                              "Sigma^2", "ICC", "CV",
                                                               "Approximate Power", "Analytic Power"))
 # we probably want a save as csv option, yeah?
   output$download <- downloadHandler(
