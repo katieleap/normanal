@@ -46,7 +46,7 @@ shinyUI(fluidPage(
                  and ICC = $\\sigma_b^2 / (\\sigma_b^2 + \\sigma^2)$'))),
       br(), br(),
       numericInput("N","Enter the number of subjects per cluster (N):",value=100), # number of subjects per clusters
-      numericInput("M","Enter the number of clusters (M):",value=3), # number of clusters
+      numericInput("M","Enter the number of clusters (M) in each arm:",value=3), # number of clusters
       numericInput("d","Enter the difference $\\delta$ in mean between the two arms:",value=0.2), # difference in mean between the two arms
       # alternative hypothesis (null is 0)
       
