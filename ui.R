@@ -93,8 +93,8 @@ shinyUI(fluidPage(
                  downloadButton("download",label="Download as CSV File"),
                  br(), br(),
                  p("Abbreviations:"),
-                 helpText("Sigma-B: $\\sigma_b^2$"),
-                 helpText("Sigma: $\\sigma^2$"),
+                 helpText("Sigma_b^2: $\\sigma_b^2$"),
+                 helpText("Sigma^2: $\\sigma^2$"),
                  helpText("ICC: Intra-cluster Correlation Coefficient, $\\sigma_b^2 / (\\sigma_b^2 + \\sigma^2)$"),
                  helpText("CV: Coefficent of Variation, $\\sigma / \\mu$")),
         tabPanel("Plot",
@@ -110,17 +110,17 @@ shinyUI(fluidPage(
         tabPanel("Citations",
                  h4("For normal results with constant cluster size:"),
                   p("Donner, A. and Klar, N. Statistical Considerations in the Design and Analysis 
-                    of Community Intervention Trials. The Journal of Clinical Epidemiology 1996;49(4):435-439 
+                    of Community Intervention Trials. The Journal of Clinical Epidemiology 1996;49:435-439 
                     PMID: 8621994"),
                   p("Murray D. Design and Analysis of Group-Randomized Trials. New York: Oxford University 
                     Press; 1998"),
                  h4("For variable cluster size using the coefficient of variation:"),
                  p("Eldridge SM, Ashby D, Kerry S. Sample size for cluster randomized trials: effect of coefficient 
-                  of variation of cluster size and analysis method. Int. J. Epidemiol. (October 2006) 35(5): 
+                  of variation of cluster size and analysis method. Int. J. Epidemiol. 2006 35: 
                   1292-1300.doi: 10.1093/ije/dyl129 PMID: 16943232"),
                  h4("For simulations:"),
                   p("Reich NG, Myers JA, Obeng D, Milstone AM, Perl TM. Empirical Power and Sample Size Calculations 
-                    for Cluster-Randomized and Cluster-Randomized Crossover Studies. PLoS ONE 2012.7(4):e35564 
+                    for Cluster-Randomized and Cluster-Randomized Crossover Studies. PLoS ONE 2012.7:e35564 
                     doi: 10.1371/journal.pone.0035564 PMCID: PMC3338707"))
       ))),
     tags$footer(br(),
