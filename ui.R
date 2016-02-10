@@ -40,11 +40,12 @@ shinyUI(fluidPage(
   titlePanel("Power for Cluster-Randomized Trials"),
   sidebarLayout(
     sidebarPanel(
-      actionLink("model","Model Equation"),
+      h5("Normal Outcome, Two Groups, Equal Number of Clusters in Each Group:",
+      actionLink("model","Model Equation")),
       hidden(div(id="modeltext", p('$y_{ij} = \\beta_0 + x_{ij}\\delta + b_{0i} +e_{ij} $'),
       tags$small('where $b_{0i} \\sim N(0, \\sigma_b^2)$, $e_{ij} \\sim N(0, \\sigma^2)$ 
                  and ICC = $\\sigma_b^2 / (\\sigma_b^2 + \\sigma^2)$'))),
-      br(), br(),
+      br(), 
       numericInput("N","Enter the number of subjects per cluster (N):",value=100), # number of subjects per clusters
       numericInput("M","Enter the number of clusters (M) in each arm:",value=3), # number of clusters
       numericInput("d","Enter the difference $\\delta$ in mean between the two arms:",value=0.2), # difference in mean between the two arms
