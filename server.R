@@ -202,8 +202,8 @@ shinyServer(function(input, output, session){
     withCallingHandlers({
       shinyjs::text("text", "")
     p.try <- suppressWarnings(power.sim.normal(n.sim=100, effect.size=as.numeric(input$d), alpha=.05,
-                              n.clusters=as.numeric(input$N), n.periods=1,
-                              cluster.size=as.numeric(input$M),
+                              n.clusters=2*as.numeric(input$M), n.periods=1,
+                              cluster.size=as.numeric(input$N),
                               period.effect = .7, period.var = 0,
                               btw.clust.var=as.numeric(input$sigmab), indiv.var=as.numeric(input$sigma),
                               verbose=TRUE,
