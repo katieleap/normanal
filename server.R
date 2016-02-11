@@ -26,7 +26,7 @@ shinyServer(function(input, output, session){
   CV <- eventReactive(input$calc, {
     if (length(input$options) == 0) 0 else {
       if ('useCV' %in% input$options) as.numeric(input$CV) else 0 }
-  })
+  }, ignoreNULL = FALSE)
   
   DP <- eventReactive(input$calc, { # design effect power
     round(as.numeric(power.t.test(n = as.numeric(input$N)*as.numeric(input$M)/(1+(as.numeric(input$N)-1)*ICC()),
