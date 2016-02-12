@@ -200,8 +200,9 @@ shinyServer(function(input, output, session){
   })
   simulate <- eventReactive(input$run, {
     withCallingHandlers({
-      shinyjs::text("text", "")
-    p.try <- suppressWarnings(power.sim.normal(n.sim=100, effect.size=as.numeric(input$d), alpha=.05,
+      shinyjs::html("text", "")
+      nsims <- as.numeric(input$nsims)
+    p.try <- suppressWarnings(power.sim.normal(n.sim=nsims, effect.size=as.numeric(input$d), alpha=.05,
                               n.clusters=2*as.numeric(input$M), n.periods=1,
                               cluster.size=as.numeric(input$N),
                               period.effect = .7, period.var = 0,
@@ -209,12 +210,11 @@ shinyServer(function(input, output, session){
                               verbose=TRUE,
                               estimation.function=random.effect))
     p.try$power
-    nsims <- as.numeric(input$nsims)
     conf <- binom.test(p.try$power*nsims, nsims)$conf.int[1:2]
     paste("Confidence Interval:", paste(round(conf,3),collapse="-"),sep=" ")
     },
     message = function(m) {
-      shinyjs::text(id = "text", text = m$message)
+      shinyjs::html(id = "text", m$message)
     })
   
    })
