@@ -83,7 +83,7 @@ shinyUI(fluidPage(
       actionButton("calc", "Calculate!")),
     
     mainPanel(
-      tabsetPanel(
+      tabsetPanel(id = "tabpanel",
         tabPanel("Table",
                  br(),
                  textOutput("tablefiller"),
