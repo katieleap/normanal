@@ -203,7 +203,8 @@ shinyServer(function(input, output, session){
     withCallingHandlers({
       shinyjs::html("text", "")
       nsims <- as.numeric(input$nsims)
-    p.try <- suppressWarnings(power.sim.normal(n.sim=nsims, effect.size=as.numeric(input$d), alpha=.05,
+    p.try <- suppressWarnings(power.sim.normal(n.sim=nsims, effect.size=as.numeric(input$d), 
+                              alpha=as.numeric(input$alpha),
                               n.clusters=2*as.numeric(input$M), n.periods=1,
                               cluster.size=as.numeric(input$N),
                               period.effect = .7, period.var = 0,
