@@ -193,6 +193,7 @@ shinyServer(function(input, output, session){
   
 ### simulations ###
   observe(if(input$tabpanel == "Simulations") disable("calc")) # grey out calc button 
+  observe(if(input$tabpanel != "Simulations") enable("calc")) # un grey out calc button 
   output$simulation <- renderText({
     validate(
       need(input$nsims,"Enter the number of simulations!")
