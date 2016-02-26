@@ -100,11 +100,13 @@ shinyUI(fluidPage(
                  helpText("ICC: Intra-cluster Correlation Coefficient, $\\sigma_b^2 / (\\sigma_b^2 + \\sigma^2)$"),
                  helpText("CV: Coefficent of Variation, $\\sigma / \\mu$"))),
         tabPanel("Plot",
+                 br(),
                  plotOutput("plot")),
         tabPanel("Simulations",
                  br(),
                  numericInput("nsims","Number of Simulations to Run:", value=100),
                  actionButton("run", "Run"),
+                 # actionButton("interrupt", "Interrupt"), not working yet
                  br(),br(),
                  p(textOutput("text")),
                  br(),

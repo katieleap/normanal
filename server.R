@@ -164,27 +164,27 @@ shinyServer(function(input, output, session){
 ### plot output ###
   output$plot <- renderPlot({
     validate(
-      need(input$options == 'multipleICC' || length(input$options) > 1, "Input multiple values to plot!")
+      need(input$options == 'multipleICC' || length(input$options) > 1, "Input multiple values to plot!"),
+      need(input$calc, "Press the calculate button to create a plot!")
     )
+    plot.val() })
+  
+  plot.val <- eventReactive(input$calc, {
     sigbrange <- function(){
     rho.values <- seq(as.numeric(input$rho1),as.numeric(input$rho2),length.out=as.numeric(input$numval))
     v.power <- Vectorize(sbpower)
-    v.apr.power <- Vectorize(sbapr.power)
-    power.df <- data.frame(rho.values,v.power(rho.values),v.apr.power(rho.values))
-    colnames(power.df) <- c("Values", "Analytic", "Approximate")
-    melt.power <- melt(power.df, id="Values")
-    ggplot(data=melt.power,aes(x=Values, y = value, color = variable)) + geom_point() +
-      labs(list(y="Power")) + scale_color_discrete(name="Power")
+    power.df <- data.frame(rho.values,v.power(rho.values))
+    colnames(power.df) <- c("Values", "Analytic")
+    ggplot(data=power.df,aes(x=Values, y = Analytic)) + geom_point() + xlab("Values of Sigma^2_b") + 
+      ylab("Analytic Power")
     }
     iccrange <- function(){
       rho.values <- seq(as.numeric(input$rho1),as.numeric(input$rho2),length.out=as.numeric(input$numval))
       v.power <- Vectorize(power)
-      v.apr.power <- Vectorize(apr.power)
-      power.df <- data.frame(rho.values,v.power(rho.values),v.apr.power(rho.values))
-      colnames(power.df) <- c("Values", "Analytic", "Approximate")
-      melt.power <- melt(power.df, id="Values")
-      ggplot(data=melt.power,aes(x=Values, y = value, color = variable)) + geom_point() +
-        labs(list(y="Power")) + scale_color_discrete(name="Power")
+      power.df <- data.frame(rho.values,v.power(rho.values))
+      colnames(power.df) <- c("Values", "Analytic")
+      ggplot(data=power.df,aes(x=Values, y = Analytic)) + geom_point() + xlab("Values of ICC") + 
+        ylab("Analytic Power")
     }
     
     if (input$rhosigmab == 'ICC') iccrange() else sigbrange()
@@ -194,24 +194,28 @@ shinyServer(function(input, output, session){
 ### simulations ###
   observe(if(input$tabpanel == "Simulations") disable("calc")) # grey out calc button 
   observe(if(input$tabpanel != "Simulations") enable("calc")) # un grey out calc button 
+#   observeEvent(input$interrupt, {
+#     inter.var <- TRUE
+#   })
   output$simulation <- renderText({
     validate(
       need(input$nsims,"Enter the number of simulations!")
     )
     simulate()
+    # inter.var <- FALSE
   })
   simulate <- eventReactive(input$run, {
     withCallingHandlers({
       shinyjs::html("text", "")
       nsims <- as.numeric(input$nsims)
-    p.try <- suppressWarnings(power.sim.normal(n.sim=nsims, effect.size=as.numeric(input$d), 
+    p.try <- power.sim.normal(n.sim=nsims, effect.size=as.numeric(input$d), 
                               alpha=as.numeric(input$alpha),
                               n.clusters=2*as.numeric(input$M), n.periods=1,
                               cluster.size=as.numeric(input$N),
                               period.effect = .7, period.var = 0,
                               btw.clust.var=as.numeric(input$sigmab), indiv.var=as.numeric(input$sigma),
                               verbose=TRUE,
-                              estimation.function=random.effect))
+                              estimation.function=random.effect)
     p.try$power
     conf <- binom.test(p.try$power*nsims, nsims)$conf.int[1:2]
     paste("Confidence Interval:", paste(round(conf,3),collapse="-"),sep=" ")
