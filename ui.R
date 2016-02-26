@@ -70,7 +70,8 @@ shinyUI(fluidPage(
                        checkboxGroupInput("optionsb", label="Options:", choices = c("Cluster size is variable" = "useCVb", "Use multiple values for $\\sigma_b^2$"
                                                                                    = "multipleICCb"))),
 
-      conditionalPanel(condition = "input.options == 'useCV' || input.options.length > 1 || input.optionsb ==  'useCVb' || input.optionsb.length > 1",
+      conditionalPanel(condition = "(input.rhosigmab == 'ICC' & input.options == 'useCV' || input.options.length > 1)
+                                     || (input.rhosigmab == 'sigmab' & input.optionsb ==  'useCVb' || input.optionsb.length > 1)",
                        numericInput("CV", label="Enter the coefficient of variation (CV):", value=0)),
       conditionalPanel(condition = "input.options == 'multipleICC' || input.options.length > 1 || input.optionsb ==  'multipleICCb' || input.optionsb.length > 1",
                        # calling it rho, but if sigmab is selected, it'll run as sigmab

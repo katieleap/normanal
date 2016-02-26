@@ -54,7 +54,15 @@ shinyServer(function(input, output, session){
 ### text output ###
   output$ap <- renderText(AP())
   output$dp <- renderText(DP())
-  
+
+### reset checkbox when switching between icc and sigmab ###
+  observeEvent(input$rhosigmab == 'sigmab', {
+    updateCheckboxGroupInput(session, "options", selected = 0)
+  })
+  observeEvent(input$rhosigmab == 'ICC', {
+    updateCheckboxGroupInput(session, "optionsb", selected = 0)
+  })
+    
   
 ### table output ###
   # difference n.clusters  n.per.cluster sigma.b sigma icc cv approx.power analytic.power
