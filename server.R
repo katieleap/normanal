@@ -227,7 +227,8 @@ shinyServer(function(input, output, session){
     withCallingHandlers({
       shinyjs::html("text", "")
       nsims <- as.numeric(input$nsims)
-    p.try <- power.sim.normal(n.sim=nsims, effect.size=as.numeric(input$d), 
+    if(input$outcome == "Normal"){
+    n.try <- power.sim.normal(n.sim=nsims, effect.size=as.numeric(input$d), 
                               alpha=as.numeric(input$alpha),
                               n.clusters=2*as.numeric(input$M), n.periods=1,
                               cluster.size=as.numeric(input$N),
@@ -235,9 +236,34 @@ shinyServer(function(input, output, session){
                               btw.clust.var=SB(), indiv.var=as.numeric(input$sigma),
                               verbose=TRUE,
                               estimation.function=random.effect)
-    conf <- binom.test(p.try$power*nsims, nsims)$conf.int[1:2]
-    output <- c(p.try$power,paste(round(conf,3),collapse="-"))
-    return(output)
+    nconf <- binom.test(n.try$power*nsims, nsims)$conf.int[1:2]
+    output <- c(n.try$power,paste(round(nconf,3),collapse="-"))
+    }
+    if(input$outcome == "Binomial"){
+    b.try <- power.sim.binomial(n.sim=nsims, effect.size=as.numeric(input$d), 
+                                alpha=as.numeric(input$alpha),
+                                n.clusters=2*as.numeric(input$M), n.periods=1,
+                                cluster.size=as.numeric(input$N),
+                                period.effect = .7, period.var = 0,
+                                btw.clust.var=SB(),
+                                verbose=TRUE,
+                                estimation.function=random.effect)
+    bconf <- binom.test(b.try$power*nsims, nsims)$conf.int[1:2]
+    output <- c(b.try$power,paste(round(bconf,3),collapse="-"))
+    }
+    if(input$outcome == "Poisson"){
+    p.try <- power.sim.poisson(n.sim=nsims, effect.size=as.numeric(input$d), 
+                               alpha=as.numeric(input$alpha),
+                               n.clusters=2*as.numeric(input$M), n.periods=1,
+                               cluster.size=as.numeric(input$N),
+                               period.effect = .7, period.var = 0,
+                               btw.clust.var=SB(), at.risk.params = 1,
+                               verbose=TRUE,
+                               estimation.function=random.effect)
+    pconf <- binom.test(p.try$power*nsims, nsims)$conf.int[1:2]
+    output <- c(p.try$power,paste(round(pconf,3),collapse="-"))
+  }
+  return(output)
     },
     message = function(m) {
       shinyjs::html(id = "text", m$message)
@@ -256,7 +282,7 @@ shinyServer(function(input, output, session){
   observeEvent(input$run, {
       t.sim$data <- data.frame(delta=as.numeric(input$d), M=as.numeric(input$M),N=as.numeric(input$N), 
                            SB=round(SB(),4), sigma=as.numeric(input$sigma), ICC=round(ICC(),4), CV=CV(),
-                           nsims=as.numeric(input$nsims), power=simulate()[1], conf=simulate()[2])
+                           nsims=as.numeric(input$nsims), power=simulate()[1], conf=simulate()[2],outcome=input$outcome)
         colnames(t.sim$data)[6] <- "ICC"
         colnames(t.sim$data)[4] <- "SB"
   })
@@ -284,7 +310,7 @@ shinyServer(function(input, output, session){
                                       class='compact hover row-border nowrap',
                                       colnames = c("Difference", "# of Clusters", "# per Cluster", "Sigma_b^2",
                                                    "Sigma^2", "ICC", "CV",
-                                                   "# of Simulations", "Power", "Confidence Interval"))
+                                                   "# of Simulations", "Power", "Confidence Interval", "Outcome"))
 
   output$downloadsim <- downloadHandler(
     filename=function(){
