@@ -18,13 +18,13 @@ shinyServer(function(input, output, session){
   })  
   
 ### reactive values that we want to use whenever ### 
-  ICC <- eventReactive(input$calc, {
+  ICC <- eventReactive(input$calc | input$run, {
     if (input$rhosigmab == 'ICC') as.numeric(input$ICC) else  {
       as.numeric(input$sigmab)/(as.numeric(input$sigma)+as.numeric(input$sigmab))
     }
   })
   
-  CV <- eventReactive(input$calc, {
+  CV <- eventReactive(input$calc | input$run, {
     if (length(input$options) == 0) 0 else {
       if ('useCV' %in% input$options) as.numeric(input$CV) else 0 }
   }, ignoreNULL = FALSE)
@@ -45,7 +45,7 @@ shinyServer(function(input, output, session){
   })
   
   # if sigma-b isn't input
-  SB <- eventReactive(input$calc, {
+  SB <- eventReactive(input$calc | input$run, {
     if (input$rhosigmab == 'ICC') (as.numeric(input$ICC)*as.numeric(input$sigma))/(as.numeric(input$ICC)+1) else {
       as.numeric(input$sigmab) }
   })
@@ -154,7 +154,7 @@ shinyServer(function(input, output, session){
   })
     
   output$table <- DT::renderDataTable(rbind(s$data,t$data),options=list(paging=FALSE,searching=FALSE,
-                                                           ordering=0, processing=0, info=0),
+                                                           ordering=1, processing=0, info=0),
                                       class='compact hover row-border nowrap',
                                       colnames = c("Difference", "Number of Clusters", "Number per Cluster", "Sigma_b^2",
                                                               "Sigma^2", "ICC", "CV",
@@ -205,7 +205,7 @@ shinyServer(function(input, output, session){
       paste('poweranalysisgraph', Sys.Date(),'.png',sep='')
     },
     content = function(file) {
-      ggsave(file, plot = if (input$rhosigmab == 'ICC') iccrange() else sigbrange(), device = "png")
+      ggsave(file, plot = plot.val(), device = "png")
     }
   )  
     
@@ -254,37 +254,11 @@ shinyServer(function(input, output, session){
   sbcalc <- function(rho){(rho*as.numeric(input$sigma))/(rho+1)}
   
   observeEvent(input$run, {
-    if((input$options == 'useCV' & length(input$options) == 1) || length(input$options) == 0 ) {
       t.sim$data <- data.frame(delta=as.numeric(input$d), M=as.numeric(input$M),N=as.numeric(input$N), 
                            SB=round(SB(),4), sigma=as.numeric(input$sigma), ICC=round(ICC(),4), CV=CV(),
                            nsims=as.numeric(input$nsims), power=simulate()[1], conf=simulate()[2])
-    } else {
-      if(input$rhosigmab == 'ICC'){
-        rho.values <- list(seq(as.numeric(input$rho1),as.numeric(input$rho2),length.out=as.numeric(input$numval)))
-        rap <- laply(rho.values,power)
-        rdp <- laply(rho.values,apr.power)
-        t.sim$data <- data.frame(delta=rep_len(as.numeric(input$d),length.out=as.numeric(input$numval)), 
-                             M=rep_len(as.numeric(input$M),length.out=as.numeric(input$numval)),
-                             N=rep_len(as.numeric(input$N),length.out=as.numeric(input$numval)), 
-                             SB= laply(rho.values,sbcalc), 
-                             sigma=rep_len(as.numeric(input$sigma),length.out=as.numeric(input$numval)), 
-                             ICC=rho.values, CV=rep_len(CV(),length.out=as.numeric(input$numval)),
-                             DP=rdp, AP=rap)
         colnames(t.sim$data)[6] <- "ICC"
-      } else {
-        rho.values <- seq(as.numeric(input$rho1),as.numeric(input$rho2),length.out=as.numeric(input$numval))
-        rap <- laply(rho.values,sbpower)
-        rdp <- laply(rho.values,sbapr.power)
-        t.sim$data <- data.frame(delta=rep_len(as.numeric(input$d),length.out=as.numeric(input$numval)), 
-                             M=rep_len(as.numeric(input$M),length.out=as.numeric(input$numval)),
-                             N=rep_len(as.numeric(input$N),length.out=as.numeric(input$numval)), 
-                             SB=rho.values, 
-                             sigma=rep_len(as.numeric(input$sigma),length.out=as.numeric(input$numval)), 
-                             ICC= laply(rho.values,icccalc), CV=rep_len(CV(),length.out=as.numeric(input$numval)),
-                             DP=rdp, AP=rap)
         colnames(t.sim$data)[4] <- "SB"
-      }
-    }
   })
   
   # savetable runs when we ask it to save and should append the new calculation to the old info
@@ -306,14 +280,22 @@ shinyServer(function(input, output, session){
   })
   
   output$simtable <- DT::renderDataTable(rbind(s.sim$data,t.sim$data),options=list(paging=FALSE,searching=FALSE,
-                                                                        ordering=0, processing=0, info=0),
+                                                                        ordering=1, processing=0, info=0),
                                       class='compact hover row-border nowrap',
-                                      colnames = c("Difference", "Number of Clusters", "Number per Cluster", "Sigma_b^2",
+                                      colnames = c("Difference", "# of Clusters", "# per Cluster", "Sigma_b^2",
                                                    "Sigma^2", "ICC", "CV",
-                                                   "Number of Simulations", "Number Rejected", "Power", "Confidence Interval"))
+                                                   "# of Simulations", "Power", "Confidence Interval"))
+
+  output$downloadsim <- downloadHandler(
+    filename=function(){
+      paste('simulatedpoweranalysis', Sys.Date(),'.csv',sep='')
+    },
+    content = function(file) {
+      write.csv(rbind(s.sim$data,t.sim$data),file)
+    }
+  )
   
-  
-})
+  })
 
 
 
