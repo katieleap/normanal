@@ -282,7 +282,7 @@ shinyServer(function(input, output, session){
   observeEvent(input$run, {
       t.sim$data <- data.frame(delta=as.numeric(input$d), M=as.numeric(input$M),N=as.numeric(input$N), 
                            SB=round(SB(),4), sigma=as.numeric(input$sigma), ICC=round(ICC(),4), CV=CV(),
-                           nsims=as.numeric(input$nsims), power=simulate()[1], conf=simulate()[2],outcome=input$outcome)
+                           nsims=as.numeric(input$nsims), rejected = as.numeric(simulate()[1])*as.numeric(input$nsims),power=round(as.numeric(simulate()[1]),3), conf=simulate()[2],outcome=input$outcome)
         colnames(t.sim$data)[6] <- "ICC"
         colnames(t.sim$data)[4] <- "SB"
   })
@@ -310,7 +310,7 @@ shinyServer(function(input, output, session){
                                       class='compact hover row-border nowrap',
                                       colnames = c("Difference", "# of Clusters", "# per Cluster", "Sigma_b^2",
                                                    "Sigma^2", "ICC", "CV",
-                                                   "# of Simulations", "Power", "Confidence Interval", "Outcome"))
+                                                   "# of Simulations", "# Rejected", "Power", "Confidence Interval", "Outcome"))
 
   output$downloadsim <- downloadHandler(
     filename=function(){
