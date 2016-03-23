@@ -34,7 +34,6 @@ shinyUI(fluidPage(
                     shiny-table-class {
                     font: sans-serif;
                     }
-                    
                     "))
     ), 
   titlePanel("Power for Cluster-Randomized Trials"),
@@ -54,8 +53,15 @@ shinyUI(fluidPage(
                        h5("Poisson Outcome, Two Groups, Equal Number of Clusters in Each Group:")),
       numericInput("N","Enter the number of subjects per cluster (N):",value=100), # number of subjects per clusters
       numericInput("M","Enter the number of clusters (M) in each arm:",value=3), # number of clusters
-      numericInput("d","Enter the difference $\\delta$ in mean between the two arms:",value=0.2), # difference in mean between the two arms
-      # alternative hypothesis (null is 0)
+      conditionalPanel(condition = "input.outcome == 'Normal'",
+                       numericInput("d","Enter the difference $\\delta$ in mean between the two arms:",value=0.2)), # difference in mean between the two arms
+                       # alternative hypothesis (null is 0)
+      conditionalPanel(condition = "input.outcome == 'Binomial'",
+                       numericInput("bOR", "Enter the odds ratio:", value=0), # binomial effect size is log of OR
+                       numericInput("bpe", "Enter the baseline probability:",value=0)), # period effect
+      conditionalPanel(condition = "input.outcome == 'Poisson'",
+                       numericInput("pes", "Enter the smaller of the two means:",value=0), # poisson effect size (might be something else)
+                      numericInput("ppe", "Enter the baseline probability:",value=0)), # period effect     
       
       # radio button: ICC or sigma-b
       radioButtons("rhosigmab", "Use either an ICC or $\\sigma_b^2$ value:", list("ICC","$\\sigma_b^2$" = "sigmab"), inline = TRUE),

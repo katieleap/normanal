@@ -225,49 +225,60 @@ shinyServer(function(input, output, session){
   })
   simulate <- eventReactive(input$run, {
     withCallingHandlers({
-      shinyjs::html("text", "")
+      # shinyjs::html("text", "") # printing console text replace by progress bar
       nsims <- as.numeric(input$nsims)
     if(input$outcome == "Normal"){
+      withProgress(message="Calculation in progress", value=0, {
     n.try <- power.sim.normal(n.sim=nsims, effect.size=as.numeric(input$d), 
                               alpha=as.numeric(input$alpha),
                               n.clusters=2*as.numeric(input$M), n.periods=1,
                               cluster.size=as.numeric(input$N),
-                              period.effect = .7, period.var = 0,
+                              period.effect = 0.7, period.var = 0,
                               btw.clust.var=SB(), indiv.var=as.numeric(input$sigma),
-                              verbose=TRUE,
-                              estimation.function=random.effect)
+                              verbose=FALSE,
+                              estimation.function=random.effect,
+                              shiny=TRUE)
+                   })
     nconf <- binom.test(n.try$power*nsims, nsims)$conf.int[1:2]
     output <- c(n.try$power,paste(round(nconf,3),collapse="-"))
     }
     if(input$outcome == "Binomial"){
-    b.try <- power.sim.binomial(n.sim=nsims, effect.size=as.numeric(input$d), 
+      withProgress(message="Calculation in progress", value=0, {
+    b.try <- power.sim.binomial(n.sim=nsims, effect.size=log(as.numeric(input$bOR)), # log OR
                                 alpha=as.numeric(input$alpha),
                                 n.clusters=2*as.numeric(input$M), n.periods=1,
                                 cluster.size=as.numeric(input$N),
-                                period.effect = .7, period.var = 0,
+                                period.effect = as.numeric(input$bpe), # baseline probability
+                                period.var = 0,
                                 btw.clust.var=SB(),
-                                verbose=TRUE,
-                                estimation.function=random.effect)
+                                verbose=FALSE,
+                                estimation.function=random.effect,
+                                shiny=TRUE)
+      })
     bconf <- binom.test(b.try$power*nsims, nsims)$conf.int[1:2]
     output <- c(b.try$power,paste(round(bconf,3),collapse="-"))
     }
     if(input$outcome == "Poisson"){
-    p.try <- power.sim.poisson(n.sim=nsims, effect.size=as.numeric(input$d), 
+      withProgress(message="Calculation in progress", value=0, {
+    p.try <- power.sim.poisson(n.sim=nsims, effect.size=as.numeric(input$pes), # baseline risk on the logit scale / *smaller mean*
                                alpha=as.numeric(input$alpha),
                                n.clusters=2*as.numeric(input$M), n.periods=1,
                                cluster.size=as.numeric(input$N),
-                               period.effect = .7, period.var = 0,
+                               period.effect = as.numeric(input$ppe), # baseline
+                               period.var = 0,
                                btw.clust.var=SB(), at.risk.params = 1,
-                               verbose=TRUE,
-                               estimation.function=random.effect)
+                               verbose=FALSE,
+                               estimation.function=random.effect,
+                               shiny=TRUE)
+      })
     pconf <- binom.test(p.try$power*nsims, nsims)$conf.int[1:2]
     output <- c(p.try$power,paste(round(pconf,3),collapse="-"))
   }
   return(output)
-    },
-    message = function(m) {
-      shinyjs::html(id = "text", m$message)
-    })
+    }
+#     message = function(m) {
+#       shinyjs::html(id = "text", m$message)}
+    )
   
    })
   
