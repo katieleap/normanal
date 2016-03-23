@@ -243,7 +243,7 @@ shinyServer(function(input, output, session){
     output <- c(n.try$power,paste(round(nconf,3),collapse="-"))
     }
     if(input$outcome == "Binomial"){
-      withProgress(message="Calculation in progress", value=0, {
+      withProgress(message="Simulation in progress", value=0, {
     b.try <- power.sim.binomial(n.sim=nsims, effect.size=log(as.numeric(input$bOR)), # log OR
                                 alpha=as.numeric(input$alpha),
                                 n.clusters=2*as.numeric(input$M), n.periods=1,
@@ -259,7 +259,7 @@ shinyServer(function(input, output, session){
     output <- c(b.try$power,paste(round(bconf,3),collapse="-"))
     }
     if(input$outcome == "Poisson"){
-      withProgress(message="Calculation in progress", value=0, {
+      withProgress(message="Simulation in progress", value=0, {
     p.try <- power.sim.poisson(n.sim=nsims, effect.size=log(as.numeric(input$pes)), # log of relative risk
                                alpha=as.numeric(input$alpha),
                                n.clusters=2*as.numeric(input$M), n.periods=1,
@@ -293,7 +293,8 @@ shinyServer(function(input, output, session){
   observeEvent(input$run, {
       t.sim$data <- data.frame(delta=as.numeric(input$d), M=as.numeric(input$M),N=as.numeric(input$N), 
                            SB=round(SB(),4), sigma=as.numeric(input$sigma), ICC=round(ICC(),4), CV=CV(),
-                           nsims=as.numeric(input$nsims), rejected = as.numeric(simulate()[1])*as.numeric(input$nsims),power=round(as.numeric(simulate()[1]),3), conf=simulate()[2],outcome=input$outcome)
+                           nsims=as.numeric(input$nsims), rejected = as.numeric(simulate()[1])*as.numeric(input$nsims),
+                           alpha=as.numeric(input$alpha),power=round(as.numeric(simulate()[1]),3), conf=simulate()[2],outcome=input$outcome)
         colnames(t.sim$data)[6] <- "ICC"
         colnames(t.sim$data)[4] <- "SB"
   })
@@ -321,7 +322,7 @@ shinyServer(function(input, output, session){
                                       class='compact hover row-border nowrap',
                                       colnames = c("Difference", "# of Clusters", "# per Cluster", "Sigma_b^2",
                                                    "Sigma^2", "ICC", "CV",
-                                                   "# of Simulations", "# Rejected", "Power", "Confidence Interval", "Outcome"))
+                                                   "# of Simulations", "# Rejected", "Alpha", "Power", "Confidence Interval", "Outcome"))
 
   output$downloadsim <- downloadHandler(
     filename=function(){
