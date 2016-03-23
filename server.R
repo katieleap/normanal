@@ -224,11 +224,11 @@ shinyServer(function(input, output, session){
     # inter.var <- FALSE
   })
   simulate <- eventReactive(input$run, {
-    withCallingHandlers({
-      # shinyjs::html("text", "") # printing console text replace by progress bar
+    # withCallingHandlers({
+      # shinyjs::html("text", "") # printing console text replaced by progress bar
       nsims <- as.numeric(input$nsims)
     if(input$outcome == "Normal"){
-      withProgress(message="Calculation in progress", value=0, {
+      withProgress(message="Simulation in progress...", value=0, {
     n.try <- power.sim.normal(n.sim=nsims, effect.size=as.numeric(input$d), 
                               alpha=as.numeric(input$alpha),
                               n.clusters=2*as.numeric(input$M), n.periods=1,
@@ -260,11 +260,11 @@ shinyServer(function(input, output, session){
     }
     if(input$outcome == "Poisson"){
       withProgress(message="Calculation in progress", value=0, {
-    p.try <- power.sim.poisson(n.sim=nsims, effect.size=as.numeric(input$pes), # baseline risk on the logit scale / *smaller mean*
+    p.try <- power.sim.poisson(n.sim=nsims, effect.size=log(as.numeric(input$pes)), # log of relative risk
                                alpha=as.numeric(input$alpha),
                                n.clusters=2*as.numeric(input$M), n.periods=1,
                                cluster.size=as.numeric(input$N),
-                               period.effect = as.numeric(input$ppe), # baseline
+                               period.effect = log(as.numeric(input$ppe)), # log of smaller mean
                                period.var = 0,
                                btw.clust.var=SB(), at.risk.params = 1,
                                verbose=FALSE,
@@ -275,10 +275,10 @@ shinyServer(function(input, output, session){
     output <- c(p.try$power,paste(round(pconf,3),collapse="-"))
   }
   return(output)
-    }
+
 #     message = function(m) {
 #       shinyjs::html(id = "text", m$message)}
-    )
+    # })
   
    })
   

@@ -60,8 +60,8 @@ shinyUI(fluidPage(
                        numericInput("bOR", "Enter the odds ratio:", value=0), # binomial effect size is log of OR
                        numericInput("bpe", "Enter the baseline probability:",value=0)), # period effect
       conditionalPanel(condition = "input.outcome == 'Poisson'",
-                       numericInput("pes", "Enter the smaller of the two means:",value=0), # poisson effect size (might be something else)
-                      numericInput("ppe", "Enter the baseline probability:",value=0)), # period effect     
+                       numericInput("ppe", "Enter the smaller of the two means:",value=0), # poisson effect size will take the log
+                      numericInput("pes", "Enter the relative risk:",value=0)), # period effect, will take the log    
       
       # radio button: ICC or sigma-b
       radioButtons("rhosigmab", "Use either an ICC or $\\sigma_b^2$ value:", list("ICC","$\\sigma_b^2$" = "sigmab"), inline = TRUE),
