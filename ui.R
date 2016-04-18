@@ -64,12 +64,12 @@ shinyUI(fluidPage(
                       numericInput("pes", "Enter the relative risk:",value=0)), # period effect, will take the log    
       
       # radio button: ICC or sigma-b
-      radioButtons("rhosigmab", "Use either an ICC or $\\sigma_b^2$ value:", list("ICC","$\\sigma_b^2$" = "sigmab"), inline = TRUE),
+      radioButtons("rhosigmab", "Use either an ICC or $\\sigma_b^2$ value:", list("ICC","$\\sigma_b^2$" = "sigmab"), inline = TRUE), # only sb for bin/pois
       conditionalPanel(condition = "input.rhosigmab == 'ICC'",
                        numericInputRow("ICC","Enter ICC value:",value=0.001)), # intra-cluster correlation coefficient
       conditionalPanel(condition = "input.rhosigmab == 'sigmab'",
                        numericInputRow("sigmab","Enter $\\sigma_b^2$ value:", value=0.001001)),
-      numericInputRow("sigma","Enter $\\sigma^2$ value:",value=1),
+      numericInputRow("sigma","Enter $\\sigma^2$ value:",value=1), # no sigma for bin and pois
       
       ## alpha can be one of the three options
       radioButtons("alpha","Enter alpha value:",c(0.025, 0.05,0.10),selected=0.05,inline=TRUE),
@@ -110,7 +110,7 @@ shinyUI(fluidPage(
                  p("Abbreviations:"),
                  helpText("Sigma_b^2: $\\sigma_b^2$"),
                  helpText("Sigma^2: $\\sigma^2$"),
-                 helpText("ICC: Intra-cluster Correlation Coefficient, $\\sigma_b^2 / (\\sigma_b^2 + \\sigma^2)$"),
+                 helpText("ICC: Intra-cluster Correlation Coefficient, $\\sigma_b^2 / (\\sigma_b^2 + \\sigma^2)$"), # change for bin and pois
                  helpText("CV: Coefficent of Variation, $\\sigma / \\mu$"))),
         tabPanel("Plot",
                  br(),
