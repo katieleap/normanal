@@ -24,9 +24,13 @@ shinyServer(function(input, output, session){
   })
   
   CV <- eventReactive(input$calc, {
-    if (length(input$options) == 0) 0 else {
-      if ('useCV' %in% input$options) as.numeric(input$CV) else 0 }
-  }, ignoreNULL = FALSE)
+    ifelse(input$rhosigmab == 'ICC', {
+        if (length(input$options) == 0) 0 else {
+        if ('useCV' %in% input$options) as.numeric(input$CV) else 0 }}, { 
+        if (length(input$optionsb) == 0) 0 else {
+        if ('useCVb' %in% input$optionsb) as.numeric(input$CV) else 0 }
+    })
+    }, ignoreNULL = FALSE)
   
   DP <- eventReactive(input$calc, { # design effect power
     round(as.numeric(power.t.test(n = as.numeric(input$N)*as.numeric(input$M)/(1+(as.numeric(input$N)-1)*ICC()),
@@ -101,12 +105,12 @@ shinyServer(function(input, output, session){
   sbcalc <- function(rho){(rho*as.numeric(input$sigma))/(rho+1)}
   
   observeEvent(input$calc, {
+    if(input$rhosigmab == 'ICC'){
     if((input$options == 'useCV' & length(input$options) == 1) || length(input$options) == 0 ) {
       t$data <- data.frame(delta=as.numeric(input$d), M=as.numeric(input$M),N=as.numeric(input$N), 
                            SB=round(SB(),4), sigma=as.numeric(input$sigma), ICC=round(ICC(),4), CV=CV(),
                            DP=DP(), AP=AP())
     } else {
-      if(input$rhosigmab == 'ICC'){
         rho.values <- list(seq(as.numeric(input$rho1),as.numeric(input$rho2),length.out=as.numeric(input$numval)))
         rap <- laply(rho.values,power)
         rdp <- laply(rho.values,apr.power)
@@ -118,6 +122,11 @@ shinyServer(function(input, output, session){
                            ICC=rho.values, CV=rep_len(CV(),length.out=as.numeric(input$numval)),
                            DP=rdp, AP=rap)
       colnames(t$data)[6] <- "ICC"
+      }} else {
+        if((input$optionsb == 'useCVb' & length(input$optionsb) == 1) || length(input$optionsb) == 0 ) {
+        t$data <- data.frame(delta=as.numeric(input$d), M=as.numeric(input$M),N=as.numeric(input$N), 
+                             SB=round(SB(),4), sigma=as.numeric(input$sigma), ICC=round(ICC(),4), CV=CV(),
+                             DP=DP(), AP=AP())
       } else {
         rho.values <- seq(as.numeric(input$rho1),as.numeric(input$rho2),length.out=as.numeric(input$numval))
         rap <- laply(rho.values,sbpower)
