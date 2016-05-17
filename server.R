@@ -150,7 +150,8 @@ shinyServer(function(input, output, session){
   
   output$tablefiller <- renderText({
     validate(
-      need(input$calc, 'Press the calculate button to create a table!'))
+      need(input$calc, 'Press the calculate button to create a table!'),
+      need(input$outcome == 'Normal', "Sorry, power for non-normal outcomes can only be simulated currently."))
   })
     
   output$table <- DT::renderDataTable(rbind(s$data,t$data),options=list(paging=FALSE,searching=FALSE,
@@ -174,7 +175,8 @@ shinyServer(function(input, output, session){
   output$plot <- renderPlot({
     validate(
       need(input$options == 'multipleICC' || length(input$options) > 1, "Input multiple values to plot!"),
-      need(input$calc, "Press the calculate button to create a plot!")
+      need(input$calc, "Press the calculate button to create a plot!"),
+      need(input$outcome == 'Normal', "Sorry, plot only available for normal outcomes.")
     )
     plot.val() })
   
@@ -184,16 +186,20 @@ shinyServer(function(input, output, session){
     v.power <- Vectorize(sbpower)
     power.df <- data.frame(rho.values,v.power(rho.values))
     colnames(power.df) <- c("Values", "Analytic")
-    ggplot(data=power.df,aes(x=Values, y = Analytic)) + geom_point() + xlab("Values of Sigma^2_b") + 
-      ylab("Analytic Power")
+    ggplot(data=power.df,aes(x=Values, y = Analytic)) + geom_point() + geom_line() + xlab("Values of Sigma^2_b") + 
+      ylab("Analytic Power") + theme(text = element_text(size=15)) + labs(title=paste("Analytic Power for Different Values of Sigma^2_b \n Difference =", 
+                                          as.numeric(input$d), "Number of Clusters =", as.numeric(input$M), "Number in Each Cluster =", as.numeric(input$N), 
+                                          "Variance =", as.numeric(input$sigma)))
     }
     iccrange <- function(){
       rho.values <- seq(as.numeric(input$rho1),as.numeric(input$rho2),length.out=as.numeric(input$numval))
       v.power <- Vectorize(power)
       power.df <- data.frame(rho.values,v.power(rho.values))
       colnames(power.df) <- c("Values", "Analytic")
-      ggplot(data=power.df,aes(x=Values, y = Analytic)) + geom_point() + xlab("Values of ICC") + 
-        ylab("Analytic Power")
+      ggplot(data=power.df,aes(x=Values, y = Analytic)) + geom_point() + geom_line() + xlab("Values of ICC") + 
+        ylab("Analytic Power") + theme(text = element_text(size=15))  + labs(title=paste("Analytic Power for Different Values of ICC \n Difference =", 
+                                                                                         as.numeric(input$d), "Number of Clusters =", as.numeric(input$M), "Number in Each Cluster =", as.numeric(input$N), 
+                                                                                         "Variance =", as.numeric(input$sigma)))
     }
     
     if (input$rhosigmab == 'ICC') iccrange() else sigbrange()
